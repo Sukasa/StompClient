@@ -33,7 +33,7 @@
         public StompSendFrame(string Destination)
         {
             _Destination = Destination;
-            _PacketBody = string.Empty;
+            Body = string.Empty;
         }
         /// <summary>
         ///     Creates a Send frame set to the given destination, with the given body
@@ -47,7 +47,12 @@
         public StompSendFrame(string Destination, string Body)
         {
             _Destination = Destination;
-            _PacketBody = Body;
+            this.Body = Body;
+        }
+
+        internal StompSendFrame()
+        {
+
         }
     }
 }

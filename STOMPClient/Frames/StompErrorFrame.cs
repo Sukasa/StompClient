@@ -13,5 +13,10 @@
         ///     The error message given by the server
         /// </summary>
         public string ErrorMessage { get { return _errorMessage; } }
+
+        internal StompErrorFrame()
+        {
+
+        }
     }
 }
