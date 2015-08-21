@@ -419,7 +419,7 @@ namespace StompClient
                     // If we expect to recieve heartbeats...
                     if (_HeartbeatRxInterval > 0)
                     {
-                        // Check that we've recieved data within the rx interval.  If not, disconnect.
+                        // ...check that we've recieved data within the rx interval.  If not, disconnect.
                         _HeartbeatRxIntervalTimeout -= SleepAmt;
                         if (_HeartbeatRxIntervalTimeout < 0)
                         {
@@ -455,6 +455,8 @@ namespace StompClient
                 {
                     // We've received data, so reset the heartbeat rx timeout
                     _HeartbeatRxIntervalTimeout = (int)(_HeartbeatRxInterval * 1.5); // +50% forgiveness for heartbeat loss
+
+                    // Now read in from the networkstream to the ring buffer
                     int AmtRead = Stream.Read(RxData, 0, Buffer.AvailableWrite);
                     Buffer.Write(RxData, AmtRead);
                 }
@@ -465,16 +467,26 @@ namespace StompClient
 
                 // Now try to build + dispatch the packet
                 if (!TryBuildPacket(Buffer) && Buffer.AvailableWrite == 0)
-                    throw new InvalidOperationException("Ran out of receive ringbuffer space in STOMPclient");
+                    throw new InvalidOperationException("Ran out of receive ringbuffer space in STOMPClient");
 
             }
         }
 
+        /// <summary>
+        ///     Tries to build a packet from the given ringbuffer
+        /// </summary>
+        /// <param name="Buffer">
+        ///     The Ringbuffer to build a packet from
+        /// </param>
+        /// <returns>
+        ///     Whether it was able to build a packet or not
+        /// </returns>
         private bool TryBuildPacket(StompRingBuffer<byte> Buffer)
         {
-            // See if we have rx'd a packet separator
+            // See if we have rx'd a packet separator or a \0 in a binary frame body
             int PacketLength = Buffer.DistanceTo(0);
 
+            // We have, so what did we find?
             if (PacketLength > 0)
             {
                 // This is a really messy block of code.
