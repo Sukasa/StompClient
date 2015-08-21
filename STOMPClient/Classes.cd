@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="StompClient.StompErrorEventArgs" Collapsed="true">
+    <Position X="2.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EventArgs\StompErrorEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompFrameEventArgs" Collapsed="true">
+    <Position X="2.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAE=</HashCode>
+      <FileName>EventArgs\StompFrameEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompMessageEventArgs" Collapsed="true">
+    <Position X="4.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EventArgs\StompMessageEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompAbortFrame" Collapsed="true">
+    <Position X="13.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompAbortFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompAckFrame" Collapsed="true">
+    <Position X="18.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompAckFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompFrameType" Collapsed="true">
+    <Position X="4.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompAttributes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompHeaderIdentifier" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompAttributes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompBeginFrame" Collapsed="true">
+    <Position X="9.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompBeginFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompBodiedFrame" Collapsed="true">
+    <Position X="7" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAACAAAAADAAAAAAAAABAAAAAQAAAAAAA=</HashCode>
+      <FileName>Frames\StompBodiedFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompCommitFrame" Collapsed="true">
+    <Position X="20.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompCommitFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompConnectedFrame" Collapsed="true">
+    <Position X="18.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAACgAAI=</HashCode>
+      <FileName>Frames\StompConnectedFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompConnectFrame" Collapsed="true">
+    <Position X="9.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAACAQAAAAAAAAAAAAACQAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompConnectFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompDisconnectFrame" Collapsed="true">
+    <Position X="13.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompDisconnectFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompErrorFrame" Collapsed="true">
+    <Position X="9.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompErrorFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompFrame" Collapsed="true">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAICgCAAAAAAAAAACAAAAAAACAAgAAAACAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompMessageFrame" Collapsed="true">
+    <Position X="11.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQIAAAAAEAAACAAAAAAAAAAAAAAAAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompMessageFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompNAckFrame" Collapsed="true">
+    <Position X="20.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompNAckFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompReceiptFrame" Collapsed="true">
+    <Position X="11.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompReceiptFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompSendFrame" Collapsed="true">
+    <Position X="7" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAAAAAAAAAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompSendFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompStompFrame" Collapsed="true">
+    <Position X="11.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAACAQAAAAAAAAAAAAACQAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompStompFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompSubscribeFrame" Collapsed="true">
+    <Position X="16" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAACAAAAABAAAAAAAAgAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompSubscribeFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompUnsubscribeFrame" Collapsed="true">
+    <Position X="16" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Frames\StompUnsubscribeFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.ExtensionMethods" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ExtensionMethods.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.STOMPClient" Collapsed="true">
+    <Position X="2.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAhAAgAwAAEQEACIQRADIQIQABSAECCQCEAIACAAAo=</HashCode>
+      <FileName>StompClient.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompRingBuffer&lt;T&gt;" Collapsed="true">
+    <Position X="2.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAEAACACQAAAAAgAAIAAAAAAKAAAAEQgAI=</HashCode>
+      <FileName>StompRingBuffer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StompClient.StompStringReader" Collapsed="true">
+    <Position X="4.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAQIAAACAAAACAAABAAABAgAABAAAAAAAA=</HashCode>
+      <FileName>StompStringReader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="StompClient.StompFrameDirection" Collapsed="true">
+    <Position X="0.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIA=</HashCode>
+      <FileName>Frames\StompAttributes.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
