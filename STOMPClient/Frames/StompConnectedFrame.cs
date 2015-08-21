@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace StompClient
+﻿namespace StompClient
 {
     [StompFrameType("CONNECTED", StompFrameDirection.ServerToClient)]
     class StompConnectedFrame : StompFrame
@@ -20,8 +14,6 @@ namespace StompClient
 
         [StompHeaderIdentifier("version")]
         internal string _Version = "1.0";
-
-
 
         internal StompConnectedFrame()
         {

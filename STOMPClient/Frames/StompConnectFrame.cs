@@ -6,7 +6,7 @@ namespace StompClient
     ///     The same as a STOMP frame, but compatible with 1.1 and 1.0
     /// </summary>
     [StompFrameType("CONNECT", StompFrameDirection.ClientToServer)]
-    public class StompConnectFrame : StompFrame
+    class StompConnectFrame : StompFrame
     {
         [StompHeaderIdentifier("accept-version")]
         internal string AcceptedVersions = "1.0,1.1,1.2";

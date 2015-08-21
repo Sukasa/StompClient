@@ -43,7 +43,7 @@
     <Compile Include="Frames\StompBeginFrame.cs" />
     <Compile Include="Frames\StompBodiedFrame.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="StompAckFrame.cs" />
+    <Compile Include="Frames\StompAckFrame.cs" />
     <Compile Include="Frames\StompAttributes.cs" />
     <Compile Include="StompClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -52,10 +52,10 @@
     <Compile Include="Frames\StompDisconnectFrame.cs" />
     <Compile Include="Frames\StompErrorFrame.cs" />
     <Compile Include="Frames\StompFrame.cs" />
-    <Compile Include="StompConnectedFrame.cs" />
-    <Compile Include="StompErrorEventArgs.cs" />
-    <Compile Include="StompFrameEventArgs.cs" />
-    <Compile Include="StompMessageEventArgs.cs" />
+    <Compile Include="Frames\StompConnectedFrame.cs" />
+    <Compile Include="EventArgs\StompErrorEventArgs.cs" />
+    <Compile Include="EventArgs\StompFrameEventArgs.cs" />
+    <Compile Include="EventArgs\StompMessageEventArgs.cs" />
     <Compile Include="Frames\StompMessageFrame.cs" />
     <Compile Include="Frames\StompNAckFrame.cs" />
     <Compile Include="Frames\StompReceiptFrame.cs" />

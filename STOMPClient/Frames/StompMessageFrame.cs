@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace StompClient
+﻿namespace StompClient
 {
+    /// <summary>
+    ///     STOMP Message frame that contains data sent from other nodes to this node via the server
+    /// </summary>
     [StompFrameType("MESSAGE", StompFrameDirection.ServerToClient)]
     class StompMessageFrame : StompBodiedFrame
     {
@@ -18,6 +15,9 @@ namespace StompClient
         [StompHeaderIdentifier("message-id")]
         internal string _MessageId = null;
 
+        /// <summary>
+        ///     The Id of the subscription that this message was received as a part of
+        /// </summary>
         public string SubscriptionId
         {
             get
@@ -26,6 +26,9 @@ namespace StompClient
             }
         }
 
+        /// <summary>
+        ///     The destination address set from the sending client
+        /// </summary>
         public string Destination
         {
             get
@@ -34,6 +37,9 @@ namespace StompClient
             }
         }
 
+        /// <summary>
+        ///     A unique Id for the message, used for Ack/NAck packets
+        /// </summary>
         public string MessageId
         {
             get

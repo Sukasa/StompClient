@@ -232,8 +232,8 @@ namespace StompClient
 
             if (SFT._Direction == StompFrameDirection.ServerToClient)
                 throw new InvalidOperationException("Attempt to send server frame from client");
-
-            String FrameData = Frame.Serialize();
+            
+            string FrameData = Frame.Serialize();
             byte[] Data = Encoding.UTF8.GetBytes(FrameData);
 
             lock (_Client)
@@ -242,7 +242,11 @@ namespace StompClient
                 _Client.GetStream().WriteByte(0);
                 _Client.GetStream().Flush();
             }
+
+            _HeartbeatTxIntervalTimeout = _HeartbeatTxInterval;
         }
+
+
 
         private void HandleMessageFrame(StompMessageFrame Frame)
         {

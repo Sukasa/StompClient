@@ -100,7 +100,7 @@ namespace StompClient
             if (this is StompBodiedFrame)
             {
                 Packet.Append("\n");
-                Packet.Append(((StompBodiedFrame)this).PacketBody);
+                Packet.Append(((StompBodiedFrame)this)._PacketBody);
             }
 
             return Packet.ToString();
@@ -160,7 +160,7 @@ namespace StompClient
             // Check for body + assign as needed
             if (Frame is StompBodiedFrame && !Reader.EOF)
             {
-                ((StompBodiedFrame)Frame).PacketBody = Reader.ReadUntil();
+                ((StompBodiedFrame)Frame)._PacketBody = Reader.ReadUntil();
             }
 
             return Frame;
