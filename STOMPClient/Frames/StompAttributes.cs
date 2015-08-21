@@ -52,7 +52,7 @@ namespace StompClient
     /// <summary>
     ///     Identifies a Frame header that should be automatically serialized or deserialized
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public class StompHeaderIdentifier : Attribute
     {
         internal string _HeaderIdentifier;
