@@ -25,6 +25,7 @@
             set
             {
                 _PacketBody = value;
+                ContentType = "text/plain";
             }
         }
 

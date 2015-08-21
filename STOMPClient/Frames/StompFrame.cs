@@ -56,10 +56,8 @@ namespace StompClient
 
         internal string Serialize()
         {
-            StringBuilder Packet = new StringBuilder();
-            
+            StringBuilder Packet = new StringBuilder();            
             Type FrameType = this.GetType();
-
             StompFrameType SFT = FrameType.GetCustomAttribute<StompFrameType>();
             if (SFT == null)
                 throw new InvalidOperationException("Attempt to serialize frame without frame type attribute");
@@ -67,22 +65,25 @@ namespace StompClient
             Packet.Append(SFT._FrameType.ToUpper());
             Packet.Append("\n");
 
-            foreach (MemberInfo MI in FrameType.FindMembers(MemberTypes.Field | MemberTypes.Property, BindingFlags.Public | BindingFlags.NonPublic, new MemberFilter(HeaderSearchFilter), null))
+            foreach (MemberInfo MI in FrameType.FindMembers(MemberTypes.Field | MemberTypes.Property,
+                                                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                                                            HeaderSearchFilter, null))
             {
                 StompHeaderIdentifier HI = MI.GetCustomAttribute<StompHeaderIdentifier>();
+                object ValueRaw = null;
                 String Value = null;
 
                 switch (MI.MemberType)
                 {
                     case MemberTypes.Property:
-                        Value = (String)((PropertyInfo)MI).GetValue(this);
+                        ValueRaw = ((PropertyInfo)MI).GetValue(this);
                         break;
                     case MemberTypes.Field:
-                        Value = (String)((FieldInfo)MI).GetValue(this);
+                        ValueRaw = ((FieldInfo)MI).GetValue(this);
                         break;
                 }
 
-                if (String.IsNullOrWhiteSpace(Value))
+                if (ValueRaw == null || String.IsNullOrWhiteSpace(Value = ValueRaw.ToString()))
                 {
                     if (!HI._IsOptional)
                         throw new InvalidOperationException(String.Format("Mandatory parameter {0} is null", MI.Name));
@@ -94,13 +95,20 @@ namespace StompClient
                     Packet.Append(Value);
                     Packet.Append("\n");
                 }
+            }
 
+            foreach (KeyValuePair<string, string> KVP in AdditionalHeaders)
+            {
+                Packet.Append(KVP.Key);
+                Packet.Append(":");
+                Packet.Append(KVP.Value);
+                Packet.Append("\n");
             }
 
             if (this is StompBodiedFrame)
             {
                 Packet.Append("\n");
-                Packet.Append(((StompBodiedFrame)this)._PacketBody);
+                Packet.Append(((StompBodiedFrame)this).Body);
             }
 
             return Packet.ToString();
@@ -115,7 +123,7 @@ namespace StompClient
         internal static StompFrame Build(string Packet, Dictionary<string, Type> TypeDictionary)
         {
             StompStringReader Reader = new StompStringReader(Packet);
-
+            int Read = 0;
             string PacketType = Reader.ReadUntil('\r', '\n').ToUpper();
             Reader.SkipThrough('\r', '\n');
 
@@ -123,8 +131,7 @@ namespace StompClient
                 throw new InvalidOperationException("Server sent unrecognized packet type");
 
             Type FrameType = TypeDictionary[PacketType.ToUpper()];
-
-            StompFrame Frame = (StompFrame)Activator.CreateInstance(FrameType);
+            StompFrame Frame = (StompFrame)Activator.CreateInstance(FrameType, true);
 
             // Assign header values here
             do {
@@ -132,7 +139,11 @@ namespace StompClient
                 Reader.Shuttle(1);
                 string Value = Reader.ReadUntil('\r', '\n');
 
-                MemberInfo MI = FrameType.FindMembers(MemberTypes.Field | MemberTypes.Property, BindingFlags.Public | BindingFlags.NonPublic, new MemberFilter(HeaderSearchFilter), Header)[0];
+                MemberInfo MI = null;
+                MemberInfo[] MIs = FrameType.FindMembers(MemberTypes.Field | MemberTypes.Property, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                                                      new MemberFilter(HeaderSearchFilter), Header);
+                if (MIs.Length > 0)
+                    MI = MIs[0];
 
                 // If in mapping, set property
                 if (MI != null)
@@ -154,8 +165,9 @@ namespace StompClient
                     // Otherwise, add to AdditonalHeaders[]
                     Frame.AdditionalHeaders.Add(new KeyValuePair<string, string>(Header, Value));
                 }
+                Read = Reader.SkipThrough('\r', '\n');
 
-            } while (Reader.SkipThrough('\r','\n') < 2 && !Reader.EOF);
+            } while (Read < 2 && !Reader.EOF);
 
             // Check for body + assign as needed
             if (Frame is StompBodiedFrame && !Reader.EOF)

@@ -14,7 +14,7 @@
 
         // We're just going to set client mode on all subscriptions, and properly ACK them all automagically
         [StompHeaderIdentifier("ack", true)]
-        internal string _ack = "client";
+        internal string _ack = "client-individual";
 
         /// <summary>
         ///     Which feed to subscribe to

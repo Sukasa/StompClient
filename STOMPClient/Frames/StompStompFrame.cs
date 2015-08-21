@@ -20,7 +20,7 @@ namespace StompClient
         [StompHeaderIdentifier("heart-beat", true)]
         internal string Heartbeat;
 
-        internal StompStompFrame(StompClient Client, Uri ConnectTo)
+        internal StompStompFrame(STOMPClient Client, Uri ConnectTo)
         {
             Hostname = ConnectTo.Host;
             Username = Client.Username;
