@@ -499,11 +499,12 @@ namespace StompClient
                 string[] HeaderCheck = Header.Split('\n');
                 int ContentLength = 0;
                 bool HasContentLength = false;
+                bool IsFullHeader = false;
 
                 // First, we look to see if our "packet" has a content-length header.  Since we scanned out to a null (\0) byte, we're guaranteed to at least have the headers
                 // of whatever packet we're examining
 
-                for (int i = 0; i < HeaderCheck.Length && HeaderCheck[i] != "" && HeaderCheck[i] != "\r"; i++)
+                for (int i = 0; i < HeaderCheck.Length; i++)
                 {
                     // We found a content-length header?  Flag it and store how large in bytes the content should be
                     if (HeaderCheck[i].StartsWith("content-length:"))
@@ -511,9 +512,18 @@ namespace StompClient
                         HasContentLength = true;
                         ContentLength = int.Parse(HeaderCheck[i].Substring(15));
                     }
+                    if (HeaderCheck[i] == "" || HeaderCheck[i] == "\r")
+                    {
+                        IsFullHeader = true;
+                        break;
+                    }
                 }
-                StompFrame Frame = null;
 
+                if (!IsFullHeader)
+                    return false;
+                
+                StompFrame Frame = null;
+                
                 if (HasContentLength)
                 {
                     // We have a content-length header.  We need to find the start of the frame body, in bytes,
