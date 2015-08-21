@@ -24,13 +24,17 @@ namespace StompClient
 
         internal string ReadUntil(params char[] Characters)
         {
+            if (EOF)
+                return "";
+
             int Ptr = _Cursor;
 
+            // Read up to anything in Characters, but don't include that character
             for (; Ptr < _String.Length && !Characters.Contains(_String[Ptr]); Ptr++)
                 ;
 
             string Output = _String.Substring(_Cursor, Ptr - _Cursor);
-            _Cursor = ++Ptr;
+            _Cursor = Ptr;
 
             return Output;
         }
@@ -65,7 +69,7 @@ namespace StompClient
                 ;
 
             string Output = _String.Substring(_Cursor, Ptr - _Cursor);
-            _Cursor = ++Ptr;
+            _Cursor = Ptr;
 
             return Output;
         }

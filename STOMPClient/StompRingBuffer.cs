@@ -16,7 +16,6 @@ namespace StompClient
         private T[] _Buffer;
         private int _WritePtr;
         private int _ReadPtr;
-        private int _Avail;
         private int _AmtWritten;
         private int _AmtRead;
 
@@ -31,14 +30,24 @@ namespace StompClient
         public StompRingBuffer(int BufferSize)
         {
             _Buffer = new T[BufferSize];
-            _Avail = BufferSize;
             _AmtWritten = 0;
         }
 
         /// <summary>
-        ///     How many bytes are available to write
+        ///     How many elements are available to write
         /// </summary>
-        public int Available { get { return _Avail; } }
+        public int AvailableWrite { get { return _Buffer.Length - _AmtWritten + _AmtRead; } }
+
+        /// <summary>
+        ///     How any elements are available to read
+        /// </summary>
+        public int AvailableRead
+        {
+            get
+            {
+                return _AmtWritten - _AmtRead - _SeekOffset;
+            }
+        }
 
         /// <summary>
         ///     Write data to the buffer of the given length
@@ -51,10 +60,8 @@ namespace StompClient
         /// </param>
         public void Write(T[] Data, int Length)
         {
-            _Avail -= Length;
-            if (_Avail < 0)
+            if (AvailableWrite < Length)
             {
-                _Avail += Length;
                 throw new InvalidOperationException("Unable to add data to ring buffer - ring buffer full");
             }
 
@@ -73,6 +80,11 @@ namespace StompClient
 
             _AmtWritten += Length;
             _WritePtr = (_WritePtr + Length) % _Buffer.Length;
+
+            if (AvailableWrite < -_SeekOffset)
+            {
+                _SeekOffset = -AvailableWrite;
+            }
         }
 
         /// <summary>
@@ -107,13 +119,19 @@ namespace StompClient
         {
             _SeekOffset += Amount;
             if (_SeekOffset > 0)
+            {
+                _SeekOffset = Math.Min(_SeekOffset, AvailableRead);
+
+                _ReadPtr += _SeekOffset;
+                _AmtRead += _SeekOffset;
+
                 _SeekOffset = 0;
+            }
 
-            if (_SeekOffset < _Avail - _Buffer.Length)
-                _SeekOffset = _Avail - _Buffer.Length;
-
-            if (_SeekOffset < -_AmtWritten)
-                _SeekOffset = -_AmtWritten;
+            if (AvailableRead < -_SeekOffset)
+            {
+                _SeekOffset = -AvailableRead;
+            }
 
             return _SeekOffset;
         }
@@ -129,7 +147,7 @@ namespace StompClient
         /// </returns>
         public T[] Read(int Amount)
         {
-            if (Amount > _Buffer.Length - _Avail)
+            if (Amount > _Buffer.Length - AvailableRead)
                 throw new InvalidOperationException("Cannot read past end of ring");
 
             int ReadFrom = (_ReadPtr + _SeekOffset + _Buffer.Length) % _Buffer.Length;
@@ -139,7 +157,7 @@ namespace StompClient
 
             if (_SeekOffset > 0)
             {
-                _Avail += _SeekOffset;
+                _AmtRead += _SeekOffset;
                 _ReadPtr += _SeekOffset;
                 _SeekOffset = 0;
             }
@@ -147,15 +165,15 @@ namespace StompClient
             if (ReadFrom + Amount >= _Buffer.Length)
             {
                 int Split = _Buffer.Length - ReadFrom;
-                Array.Copy(_Buffer, Amount - Split, Data, 0, Split);
-                Array.Copy(_Buffer, 0, Data, ReadFrom, Amount - Split);
+
+                Array.Copy(_Buffer, ReadFrom, Data, 0, Split);
+                Array.Copy(_Buffer, 0, Data, Split, Amount - Split);
             }
             else
             {
                 Array.Copy(_Buffer, ReadFrom, Data, 0, Amount);
             }
 
-            _AmtRead += Amount;
 
             return Data;
         }

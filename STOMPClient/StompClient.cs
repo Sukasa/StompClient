@@ -23,7 +23,7 @@ namespace StompClient
     ///         to the protocol including internal serialization that supports custom types derived from <seealso cref="StompFrame"/>.
     ///     </para>
     /// </remarks>
-    public class StompClient
+    public class STOMPClient
     {
         public delegate void StompMessageEvent(object sender, StompMessageEventArgs e);
         public delegate void StompFrameEvent(object sender, StompFrameEventArgs e);
@@ -39,6 +39,8 @@ namespace StompClient
         private float _ConnectionVersion = 0.0f;
         private Thread _PollThread;
         private TcpClient _Client;
+        private Dictionary<string, string> _Subscriptions = new Dictionary<string, string>();
+        private int _NumSubscriptions;
 
         /// <summary>
         ///     Fires when a Message frame is received
@@ -143,10 +145,10 @@ namespace StompClient
         /// <remarks>
         ///     Constructs a Stomp client and opens a connection to the address supplied.  Will attempt to use protocol v1.2 initially, with the base protocol only.
         /// </remarks>
-        public StompClient(Uri ServerAddress)
+        public STOMPClient(Uri ServerAddress)
             : this()
         {
-
+            Connect(ServerAddress);
         }
 
         /// <summary>
@@ -155,17 +157,19 @@ namespace StompClient
         /// <remarks>
         ///     Constructs a Stomp client with default settings, but does not connect to a server
         /// </remarks>
-        public StompClient()
+        public STOMPClient()
         {
+            // Set up default values
             UseStompPacket = false;
             HeartbeatTimeout = 0;
             RxBufferSize = 16384;
 
+            // Load the base types in this library
             Assembly.GetExecutingAssembly().GetTypes()
                                            .Where(x => typeof(StompFrame).IsAssignableFrom(x) && !x.IsAbstract)
-                                           .Select<Type, Tuple<String, Type>>(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
+                                           .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
                                            .ForEach(x => _FrameTypeMapping[x.Item1] = x.Item2);
-
+            // Init the client
             CreateClient();
         }
 
@@ -174,9 +178,10 @@ namespace StompClient
         /// </summary>
         public void ImportProtocolExtensions()
         {
+            // Reload ALL frame types in the current appdomain - i.e. "import" all types from code using this library
             AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                                            .Where(x => typeof(StompFrame).IsAssignableFrom(x) && !x.IsAbstract)
-                                           .Select<Type, Tuple<String, Type>>(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
+                                           .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
                                            .ForEach(x => _FrameTypeMapping[x.Item1] = x.Item2);
         }
 
@@ -186,15 +191,18 @@ namespace StompClient
         /// <param name="ServerAddress"></param>
         public void Connect(Uri ServerAddress)
         {
+            // If we're already connected, close that connection and killit hard
             if (_Client.Connected)
             {
                 _Client.Close();
                 CreateClient();
             }
+
+            // Now connect to the new stomp server
             _Client.Connect(Dns.GetHostAddresses(ServerAddress.Host)[0], ServerAddress.Port);
 
             if (!_Client.Connected)
-                throw new InvalidOperationException("Not connected to server");
+                throw new InvalidOperationException("Failed to connect to server");
 
             if (UseStompPacket)
             {
@@ -205,6 +213,7 @@ namespace StompClient
                 SendFrame(new StompConnectFrame(this, ServerAddress));
             }
 
+            // Start the polling thread to handle heartbeats, etc
             _PollThread = new Thread(Run);
             _PollThread.Start();
         }
@@ -215,7 +224,7 @@ namespace StompClient
         /// <param name="Frame">
         ///     The <seealso cref="StompFrame"/> to send to the server 
         /// </param>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="ArgumentException">
         ///     Thrown if
         ///     <list type="number">
         ///         <item>You attempt to serialize a frame class that has no <seealso cref="StompFrameType"/> attribute</item>
@@ -225,33 +234,96 @@ namespace StompClient
         /// </exception>
         public void SendFrame(StompFrame Frame)
         {
+            // Get some metadata about the frame that we'll need
             StompFrameType SFT = Frame.GetType().GetCustomAttribute<StompFrameType>();
 
+            // Validate frame before doing anything else
             if (SFT == null)
-                throw new InvalidOperationException("Attempt to serialize frame without frame type attribute");
+                throw new ArgumentException("Attempt to serialize frame without frame type attribute", "Frame");
 
             if (SFT._Direction == StompFrameDirection.ServerToClient)
-                throw new InvalidOperationException("Attempt to send server frame from client");
+                throw new ArgumentException("Attempt to send server frame from client", "Frame");
             
+            // Serialize the frame and convert to byte array
             string FrameData = Frame.Serialize();
             byte[] Data = Encoding.UTF8.GetBytes(FrameData);
 
+            // Now send the frame
             lock (_Client)
             {
                 _Client.GetStream().Write(Data, 0, Data.Length);
                 _Client.GetStream().WriteByte(0);
-                _Client.GetStream().Flush();
+                _HeartbeatTxIntervalTimeout = _HeartbeatTxInterval;
             }
 
-            _HeartbeatTxIntervalTimeout = _HeartbeatTxInterval;
         }
 
+        // ---
 
+        [Obsolete("This is a debug function.  Don't use it.")]
+        public string GetSerializedPacket(StompFrame Frame)
+        {
+            return Frame.Serialize();
+        }
+
+        [Obsolete("This is a debug function.  Don't use it.")]
+        public StompFrame GetBuiltFrame(string Packet) {
+            return StompFrame.Build(Packet, _FrameTypeMapping);
+        }
+
+        // ---
+
+        /// <summary>
+        ///     Subscribe to a feed, getting the Subscription Id assigned to that feed
+        /// </summary>
+        /// <param name="Destination">
+        ///     What destination to subscribe to
+        /// </param>
+        /// <returns>
+        ///     A unique Id for this subscription
+        /// </returns>
+        public string Subscribe(string Destination)
+        {
+            if (_Subscriptions.ContainsKey(Destination))
+                return _Subscriptions[Destination];
+            
+            Random RNG = new Random(_NumSubscriptions++);
+            string Id;
+
+            do
+            {
+                Id = string.Format("{0}{1}{2}{3}{4}{5}{6}{7}", RNG.Next('a', 'Z'), RNG.Next('a', 'Z'), RNG.Next('a', 'Z'), RNG.Next('a', 'Z'),
+                                                               RNG.Next('a', 'Z'), RNG.Next('a', 'Z'), RNG.Next('a', 'Z'), RNG.Next('a', 'Z'));
+            } while (_Subscriptions.ContainsValue(Id));
+
+            StompSubscribeFrame Frame = new StompSubscribeFrame(Destination, Id);
+            SendFrame(Frame);
+            _Subscriptions[Destination] = Id;
+
+            return Id;
+        }
+
+        /// <summary>
+        ///     Unsubscribe from a subscription based on the subscription Id
+        /// </summary>
+        /// <param name="SubscriptionId">
+        ///     The subscription Id originall returned by <seealso cref="Subscribe"/>
+        /// </param>
+        public void Unsubscribe(string SubscriptionId)
+        {
+            if (!_Subscriptions.ContainsValue(SubscriptionId))
+                throw new ArgumentException("Not subscribed to a feed with this Id", "SubscriptionId");
+
+            KeyValuePair<String, string> Subscription = _Subscriptions.First(x => x.Value == SubscriptionId);
+            StompUnsubscribeFrame Frame = new StompUnsubscribeFrame(Subscription.Value);
+            _Subscriptions.Remove(Subscription.Key);
+        }
 
         private void HandleMessageFrame(StompMessageFrame Frame)
         {
             StompMessageEventArgs e = new StompMessageEventArgs(Frame);
 
+            // First, raise the event - catch it if the client code throws an exception and spit to console but don't crash
             try
             {
                 MessageReceived(this, e);
@@ -261,19 +333,21 @@ namespace StompClient
                 Console.WriteLine(ex.ToString());
             }
 
-            StompMessageFrame MF = (StompMessageFrame)Frame;
+            // Now reply with either NAck or Ack depending on what was set on the EventArgs
             if (e.SendNAck)
             {
-                SendFrame(new StompNAckFrame(MF.MessageId));
+                SendFrame(new StompNAckFrame(Frame.MessageId));
             }
             else
             {
-                SendFrame(new StompAckFrame(MF.MessageId));
+                SendFrame(new StompAckFrame(Frame.MessageId));
             }
         }
 
         private void DispatchFrame(StompFrame Frame)
         {
+            // Dispatch the frame to the correct handler function or event
+
             if (Frame is StompMessageFrame)
             {
                 HandleMessageFrame((StompMessageFrame)Frame);
@@ -284,9 +358,9 @@ namespace StompClient
                 {
                     FrameReceipt(this, new StompFrameEventArgs(Frame));
                 }
-                finally
+                catch (Exception ex)
                 {
-
+                    Console.WriteLine(ex.ToString());
                 }
             }
             else if (Frame is StompErrorFrame)
@@ -295,9 +369,9 @@ namespace StompClient
                 {
                     ServerError(this, new StompErrorEventArgs((StompErrorFrame)Frame));
                 }
-                finally
+                catch(Exception ex)
                 {
-
+                    Console.WriteLine(ex.ToString());
                 }
             }
             else if (Frame is StompConnectedFrame)
@@ -305,7 +379,7 @@ namespace StompClient
                 // Handle connection configuration
                 StompConnectedFrame SCF = (StompConnectedFrame)Frame;
 
-                int[] Timings = SCF._Heartbeat.Split(',').Select<string, int>(x => int.Parse(x)).ToArray();
+                int[] Timings = SCF._Heartbeat.Split(',').Select(x => int.Parse(x)).ToArray();
 
                 _HeartbeatRxInterval = Math.Max(_Heartbeat, Timings[0]);
                 _HeartbeatTxInterval = Math.Max(_Heartbeat, Timings[1]);
@@ -318,27 +392,33 @@ namespace StompClient
                 {
                     FrameReceived(this, new StompFrameEventArgs(Frame));
                 }
-                finally
+                catch (Exception ex)
                 {
-
+                    Console.WriteLine(ex.ToString());
                 }
             }
         }
 
         private void Run()
         {
-            byte[] RxData = new byte[512];
+            byte[] RxData = new byte[512]; // Rx buffer used for transferring data from the stream to the ring buffer
             NetworkStream Stream = _Client.GetStream();
             StompRingBuffer<byte> Buffer = new StompRingBuffer<byte>(RxBufferSize);
 
+            // Run while the client is connected, polling for data rx'd and dispatching frames as necessary
+            // Also handle heartbeats and heartbeat disconnect
             while (_Client.Connected)
             {
+                // If we should be heartbeating, and we're connected...
                 if (_Heartbeat > 0 && ConnectionVersion > 0.0f)
                 {
+                    // Sleep up to 15ms, or less if we need to heartbeat sooner
                     int SleepAmt = Math.Min(_HeartbeatTxIntervalTimeout, 15);
 
+                    // If we expect to recieve heartbeats...
                     if (_HeartbeatRxInterval > 0)
                     {
+                        // Check that we've recieved data within the rx interval.  If not, disconnect.
                         _HeartbeatRxIntervalTimeout -= SleepAmt;
                         if (_HeartbeatRxIntervalTimeout < 0)
                         {
@@ -350,25 +430,31 @@ namespace StompClient
                         }
                     }
 
+                    // If we need to send heartbeats...
                     if (_HeartbeatTxInterval > 0)
                     {
+                        // ... send one if it's been too long since our last transmission
                         _HeartbeatTxIntervalTimeout -= SleepAmt;
                         if (_HeartbeatTxIntervalTimeout < 0 && _HeartbeatTxInterval > 0)
+                        {
                             _Client.GetStream().WriteByte((byte)'\n');
+                            _HeartbeatTxIntervalTimeout = _HeartbeatTxInterval;
+                        }
                     }
 
                     Thread.Sleep(SleepAmt);
                 }
-                else
+                else // Otherwise just do a standard sleep
                 {
                     Thread.Sleep(15);
                 }
 
                 // Read in as much data from the stream as we can into the ring buffer
-                while (_Client.Available > 0 && Buffer.Available > 0)
+                while (_Client.Available > 0 && Buffer.AvailableWrite > 0)
                 {
+                    // We've received data, so reset the heartbeat rx timeout
                     _HeartbeatRxIntervalTimeout = (int)(_HeartbeatRxInterval * 1.5); // +50% forgiveness for heartbeat loss
-                    int AmtRead = Stream.Read(RxData, 0, Buffer.Available);
+                    int AmtRead = Stream.Read(RxData, 0, Buffer.AvailableWrite);
                     Buffer.Write(RxData, AmtRead);
                 }
 
@@ -383,24 +469,20 @@ namespace StompClient
                 if (PacketLength > 0)
                 {
                     String Packet = Encoding.UTF8.GetString(Buffer.Read(PacketLength));
-
                     StompFrame Frame = StompFrame.Build(Packet, _FrameTypeMapping);
-
                     DispatchFrame(Frame);
-
-
                     Buffer.Read(1);
                 }
             }
-
-
         }
 
         private void CreateClient()
         {
+            // Kill the poll thread hard if it's still going (it really shouldn't be, but...)
             if (_PollThread != null && _PollThread.ThreadState == ThreadState.Running)
                 _PollThread.Abort();
 
+            // Create a new TcpClient
             _Client = new TcpClient();
         }
 
