@@ -30,7 +30,7 @@ namespace StompClient
         public delegate void StompErrorEvent(object sender, StompErrorEventArgs e);
         public delegate void StompReceiptEvent(object sender, StompFrameEventArgs e);
 
-        private Dictionary<string, Type> _FrameTypeMapping = new Dictionary<string,Type>();
+        private Dictionary<string, Type> _FrameTypeMapping = new Dictionary<string, Type>();
         private int _Heartbeat = 0;
         private int _HeartbeatTxInterval = 0;
         private int _HeartbeatRxInterval = 0;
@@ -117,7 +117,7 @@ namespace StompClient
         /// The username used when connecting to the Stomp server
         /// </summary>
         public string Username { get; set; }
-        
+
         /// <summary>
         /// The password used when connecting to the Stomp server
         /// </summary>
@@ -134,7 +134,7 @@ namespace StompClient
         /// <summary>
         ///     Which version of the Stomp protocol is in use
         /// </summary>
-        public float ConnectionVersion { get { return _ConnectionVersion;  } }
+        public float ConnectionVersion { get { return _ConnectionVersion; } }
 
         /// <summary>
         ///     Creates a new Stomp client and connects to the destination server with default settings
@@ -243,7 +243,7 @@ namespace StompClient
 
             if (SFT._Direction == StompFrameDirection.ServerToClient)
                 throw new ArgumentException("Attempt to send server frame from client", "Frame");
-            
+
             // Serialize the frame and convert to byte array
             string FrameData = Frame.Serialize();
             byte[] Data = Encoding.UTF8.GetBytes(FrameData);
@@ -267,7 +267,8 @@ namespace StompClient
         }
 
         [Obsolete("This is a debug function.  Don't use it.")]
-        public StompFrame GetBuiltFrame(string Packet) {
+        public StompFrame GetBuiltFrame(byte[] Packet)
+        {
             return StompFrame.Build(Packet, _FrameTypeMapping);
         }
 
@@ -286,7 +287,7 @@ namespace StompClient
         {
             if (_Subscriptions.ContainsKey(Destination))
                 return _Subscriptions[Destination];
-            
+
             Random RNG = new Random(_NumSubscriptions++);
             string Id;
 
@@ -369,7 +370,7 @@ namespace StompClient
                 {
                     ServerError(this, new StompErrorEventArgs((StompErrorFrame)Frame));
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
                 }
@@ -462,18 +463,80 @@ namespace StompClient
                 while (Buffer.Peek() == '\r' || Buffer.Peek() == '\n' || Buffer.Peek() == '\0')
                     Buffer.Read(1);
 
-                // See if we have rx'd a packet separator
-                // DOES NOT SUPPORT BINARY BLOBS
-                int PacketLength = Buffer.DistanceTo(0);
+                // Now try to build + dispatch the packet
+                if (!TryBuildPacket(Buffer) && Buffer.AvailableWrite == 0)
+                    throw new InvalidOperationException("Ran out of receive ringbuffer space in STOMPclient");
 
-                if (PacketLength > 0)
+            }
+        }
+
+        private bool TryBuildPacket(StompRingBuffer<byte> Buffer)
+        {
+            // See if we have rx'd a packet separator
+            int PacketLength = Buffer.DistanceTo(0);
+
+            if (PacketLength > 0)
+            {
+                // This is a really messy block of code.
+
+                // The goal is that it tries to determine whether it has a full packet or needs to wait for more data
+                // before building the packet and dispatching it
+
+                byte[] Data = Buffer.Peek(PacketLength);
+                string Header = Encoding.UTF8.GetString(Data);
+                string[] HeaderCheck = Header.Split('\n');
+                int ContentLength = 0;
+                bool HasContentLength = false;
+
+                // First, we look to see if our "packet" has a content-length header.  Since we scanned out to a null (\0) byte, we're guaranteed to at least have the headers
+                // of whatever packet we're examining
+
+                for (int i = 0; i < HeaderCheck.Length && HeaderCheck[i] != "" && HeaderCheck[i] != "\r"; i++)
                 {
-                    String Packet = Encoding.UTF8.GetString(Buffer.Read(PacketLength));
-                    StompFrame Frame = StompFrame.Build(Packet, _FrameTypeMapping);
+                    // We found a content-length header?  Flag it and store how large in bytes the content should be
+                    if (HeaderCheck[i].StartsWith("content-length:"))
+                    {
+                        HasContentLength = true;
+                        ContentLength = int.Parse(HeaderCheck[i].Substring(15));
+                    }
+                }
+                StompFrame Frame = null;
+
+                if (HasContentLength)
+                {
+                    // We have a content-length header.  We need to find the start of the frame body, in bytes,
+                    // and then make sure we have (ContentLength) bytes available after that
+
+                    // Look for the end of the headers, either 1.0/1.1 or 1.2 (\r\n)-friendly
+                    int EndOfHeaders = Header.IndexOf("\r\n\r\n") + 4;
+                    if (EndOfHeaders == -3) // (-1) + 4
+                        EndOfHeaders = Header.IndexOf("\n\n") + 2;
+
+                    // Get the byte length of the header
+                    int Offset = Encoding.UTF8.GetByteCount(Header.Substring(0, EndOfHeaders));
+
+                    // Now see if we have that many bytes available in the ring buffer (realistically, we should except for obscene frame sizes)
+                    if (Offset + ContentLength <= Buffer.AvailableRead)
+                    {
+                        // If we do, peek the exact packet length we want and assemble
+                        Frame = StompFrame.Build(Buffer.Peek(Offset + ContentLength), _FrameTypeMapping);
+                        Buffer.Seek(Offset + ContentLength);
+                        DispatchFrame(Frame);
+
+                        return true;
+                    }
+                }
+                else // No content-length.  We're guaranteed to be a text packet without any overshoot; no special treatment needed
+                {
+                    Frame = StompFrame.Build(Data, _FrameTypeMapping);
+                    Buffer.Seek(PacketLength);
                     DispatchFrame(Frame);
-                    Buffer.Read(1);
+
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private void CreateClient()

@@ -24,7 +24,7 @@ namespace ClientTest
 
             Console.WriteLine(Output);
 
-            StompFrame Rebuilt = Client.GetBuiltFrame(Output);
+            StompFrame Rebuilt = Client.GetBuiltFrame(System.Text.Encoding.UTF8.GetBytes(Output));
 
             Console.WriteLine("");
             Console.WriteLine("------");
@@ -33,9 +33,9 @@ namespace ClientTest
             Output = Client.GetSerializedPacket(Rebuilt);
             Console.WriteLine(Output);
 
+            Console.WriteLine("");
+            Console.WriteLine("------");
 
-            Console.WriteLine("");
-            Console.WriteLine("");
             NextTest("RingBuffer Data Length");
 
             StompRingBuffer<int> Buffer = new StompRingBuffer<int>(128);

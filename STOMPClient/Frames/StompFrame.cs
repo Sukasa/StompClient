@@ -108,7 +108,7 @@ namespace StompClient
             if (this is StompBodiedFrame)
             {
                 Packet.Append("\n");
-                Packet.Append(((StompBodiedFrame)this).Body);
+                Packet.Append(((StompBodiedFrame)this).BodyText);
             }
 
             return Packet.ToString();
@@ -120,9 +120,12 @@ namespace StompClient
             return ID != null && ((Compare is string && ID._HeaderIdentifier == (string)Compare) || Compare == null);
         }
 
-        internal static StompFrame Build(string Packet, Dictionary<string, Type> TypeDictionary)
+        internal static StompFrame Build(byte[] Packet, Dictionary<string, Type> TypeDictionary)
         {
-            StompStringReader Reader = new StompStringReader(Packet);
+            string PacketAsString = Encoding.UTF8.GetString(Packet);
+            StompStringReader Reader = new StompStringReader(PacketAsString);
+
+
             int Read = 0;
             string PacketType = Reader.ReadUntil('\r', '\n').ToUpper();
             Reader.SkipThrough('\r', '\n');
@@ -170,9 +173,12 @@ namespace StompClient
             } while (Read < 2 && !Reader.EOF);
 
             // Check for body + assign as needed
-            if (Frame is StompBodiedFrame && !Reader.EOF)
+            if (Frame is StompBodiedFrame)
             {
-                ((StompBodiedFrame)Frame)._PacketBody = Reader.ReadUntil();
+                int BytePtr = Encoding.UTF8.GetByteCount(PacketAsString.Substring(0, Reader.Cursor));
+
+                ((StompBodiedFrame)Frame)._PacketData = new byte[Packet.Length - BytePtr];
+                Array.Copy(Packet, BytePtr, ((StompBodiedFrame)Frame)._PacketData, 0, Packet.Length - BytePtr);
             }
 
             return Frame;

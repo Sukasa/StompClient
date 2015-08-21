@@ -13,6 +13,8 @@ namespace StompClient
             _Cursor = 0;
         }
 
+        public int Cursor { get { return _Cursor; } }
+
         public void Seek(int Pos)
         {
             _Cursor = Pos;

@@ -143,16 +143,15 @@ namespace StompClient
         ///     How many buffer elements to read and return
         /// </param>
         /// <returns>
-        ///     An array containing the next <i>Amount</i> elements in the bfufer starting from the current seek position
+        ///     An array containing the next <i>Amount</i> elements in the buffer starting from the current seek position
         /// </returns>
         public T[] Read(int Amount)
         {
             if (Amount > _Buffer.Length - AvailableRead)
                 throw new InvalidOperationException("Cannot read past end of ring");
 
-            int ReadFrom = (_ReadPtr + _SeekOffset + _Buffer.Length) % _Buffer.Length;
-            T[] Data = new T[Amount];
-
+            T[] Data = Peek(Amount);
+            
             _SeekOffset += Amount;
 
             if (_SeekOffset > 0)
@@ -161,6 +160,24 @@ namespace StompClient
                 _ReadPtr += _SeekOffset;
                 _SeekOffset = 0;
             }
+
+            return Data;
+        }
+
+        /// <summary>
+        ///     Read data out of the ring buffer from the current seek position without consuming it from the buffer
+        /// </summary>
+        /// <param name="Amount">
+        ///     How many buffer elements to read and return
+        /// </param>
+        /// <returns>
+        ///     An array containing the next <i>Amount</i> elements in the buffer starting from the current seek position
+        /// </returns>
+        public T[] Peek(int Amount)
+        {
+            int ReadFrom = (_ReadPtr + _SeekOffset + _Buffer.Length) % _Buffer.Length;
+
+            T[] Data = new T[Amount];
 
             if (ReadFrom + Amount >= _Buffer.Length)
             {
@@ -173,7 +190,6 @@ namespace StompClient
             {
                 Array.Copy(_Buffer, ReadFrom, Data, 0, Amount);
             }
-
 
             return Data;
         }
