@@ -1,6 +1,7 @@
 ﻿using System;
+using STOMP.Frames;
 
-namespace StompClient
+namespace STOMP
 {
     /// <summary>
     ///     Base event args class for Stomp frame events

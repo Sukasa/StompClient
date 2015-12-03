@@ -7,15 +7,16 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using STOMP.Frames;
 
-namespace StompClient
+namespace STOMP
 {
     /// <summary>
     ///  A basic STOMP protocol client
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The StompClient class encapsulates a mostly-compliant Stomp 1.2 client (1.0, 1.1 compatible), with the exception that it does not support binary payloads at this time.
+    ///         The StompClient class encapsulates a STOMP 1.2-compliant client
     ///     </para>
     ///     
     ///     <para>
@@ -164,11 +165,11 @@ namespace StompClient
             HeartbeatTimeout = 0;
             RxBufferSize = 16384;
 
-            // Load the base types in this library
-            Assembly.GetExecutingAssembly().GetTypes()
-                                           .Where(x => typeof(StompFrame).IsAssignableFrom(x) && !x.IsAbstract)
-                                           .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
-                                           .ForEach(x => _FrameTypeMapping[x.Item1] = x.Item2);
+            // Load the base STOMP types
+            STOMP.Shared.Support.GetBaseFrameTypes()
+                                .Where(x => typeof(StompFrame).IsAssignableFrom(x) && !x.IsAbstract)
+                                .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>().FrameType, x))
+                                .ForEach(x => _FrameTypeMapping[x.Item1] = x.Item2);
             // Init the client
             CreateClient();
         }
@@ -181,7 +182,7 @@ namespace StompClient
             // Reload ALL frame types in the current appdomain - i.e. "import" all types from code using this library
             AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                                            .Where(x => typeof(StompFrame).IsAssignableFrom(x) && !x.IsAbstract)
-                                           .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>()._FrameType, x))
+                                           .Select(x => new Tuple<String, Type>(x.GetCustomAttribute<StompFrameType>().FrameType, x))
                                            .ForEach(x => _FrameTypeMapping[x.Item1] = x.Item2);
         }
 
@@ -206,11 +207,22 @@ namespace StompClient
 
             if (UseStompPacket)
             {
-                SendFrame(new StompStompFrame(this, ServerAddress));
+                StompStompFrame Frame = new StompStompFrame();
+                Frame.Heartbeat = string.Format("{0},{0}", _Heartbeat);
+                Frame.Hostname = ServerAddress.Host;
+                Frame.Password = Password;
+                Frame.Username = Username;
+
+                SendFrame(Frame);
             }
             else
             {
-                SendFrame(new StompConnectFrame(this, ServerAddress));
+                StompConnectFrame Frame = new StompConnectFrame();
+                Frame.Heartbeat = string.Format("{0},{0}", _Heartbeat);
+                Frame.Hostname = ServerAddress.Host;
+                Frame.Password = Password;
+                Frame.Username = Username;
+                SendFrame(Frame);
             }
 
             // Start the polling thread to handle heartbeats, etc
@@ -241,12 +253,11 @@ namespace StompClient
             if (SFT == null)
                 throw new ArgumentException("Attempt to serialize frame without frame type attribute", "Frame");
 
-            if (SFT._Direction == StompFrameDirection.ServerToClient)
+            if (SFT.Direction == StompFrameDirection.ServerToClient)
                 throw new ArgumentException("Attempt to send server frame from client", "Frame");
 
             // Serialize the frame and convert to byte array
-            string FrameData = Frame.Serialize();
-            byte[] Data = Encoding.UTF8.GetBytes(FrameData);
+            byte[] Data = Frame.Serialize();
 
             // Now send the frame
             lock (_Client)
@@ -261,7 +272,7 @@ namespace StompClient
         // ---
 
         [Obsolete("This is a debug function.  Don't use it.")]
-        public string GetSerializedPacket(StompFrame Frame)
+        public byte[] GetSerializedPacket(StompFrame Frame)
         {
             return Frame.Serialize();
         }
@@ -337,11 +348,11 @@ namespace StompClient
             // Now reply with either NAck or Ack depending on what was set on the EventArgs
             if (e.SendNAck)
             {
-                SendFrame(new StompNAckFrame(Frame.MessageId));
+                SendFrame(new StompNAckFrame(Frame.Ack));
             }
             else
             {
-                SendFrame(new StompAckFrame(Frame.MessageId));
+                SendFrame(new StompAckFrame(Frame.Ack));
             }
         }
 
@@ -380,12 +391,12 @@ namespace StompClient
                 // Handle connection configuration
                 StompConnectedFrame SCF = (StompConnectedFrame)Frame;
 
-                int[] Timings = SCF._Heartbeat.Split(',').Select(x => int.Parse(x)).ToArray();
+                int[] Timings = SCF.Heartbeat.Split(',').Select(x => int.Parse(x)).ToArray();
 
                 _HeartbeatRxInterval = Math.Max(_Heartbeat, Timings[0]);
                 _HeartbeatTxInterval = Math.Max(_Heartbeat, Timings[1]);
 
-                _ConnectionVersion = float.Parse(SCF._Version);
+                _ConnectionVersion = float.Parse(SCF.Version);
             }
             else
             {
@@ -481,7 +492,7 @@ namespace StompClient
         /// <returns>
         ///     Whether it was able to build a packet or not
         /// </returns>
-        private bool TryBuildPacket(StompRingBuffer<byte> Buffer)
+        public bool TryBuildPacket(StompRingBuffer<byte> Buffer)
         {
             // See if we have rx'd a packet separator or a \0 in a binary frame body
             int PacketLength = Buffer.DistanceTo(0);
@@ -521,7 +532,7 @@ namespace StompClient
 
                     // Look for the end of the headers, either 1.0/1.1 or 1.2 (\r\n)-friendly
                     int EndOfHeaders = Header.IndexOf("\r\n\r\n") + 4;
-                    if (EndOfHeaders == -3) // (-1) + 4
+                    if (EndOfHeaders == 3) // (-1) + 4
                         EndOfHeaders = Header.IndexOf("\n\n") + 2;
 
                     // Get the byte length of the header
@@ -559,6 +570,7 @@ namespace StompClient
 
             // Create a new TcpClient
             _Client = new TcpClient();
+            _Client.NoDelay = true;
         }
 
     }

@@ -29,6 +29,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-Embedded|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-Embedded\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Embedded|AnyCPU'">
+    <OutputPath>bin\Release-Embedded\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -39,35 +57,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Frames\StompAbortFrame.cs" />
-    <Compile Include="Frames\StompBeginFrame.cs" />
-    <Compile Include="Frames\StompBodiedFrame.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="Frames\StompAckFrame.cs" />
-    <Compile Include="Frames\StompAttributes.cs" />
     <Compile Include="StompClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Frames\StompCommitFrame.cs" />
-    <Compile Include="Frames\StompConnectFrame.cs" />
-    <Compile Include="Frames\StompDisconnectFrame.cs" />
-    <Compile Include="Frames\StompErrorFrame.cs" />
-    <Compile Include="Frames\StompFrame.cs" />
-    <Compile Include="Frames\StompConnectedFrame.cs" />
     <Compile Include="EventArgs\StompErrorEventArgs.cs" />
     <Compile Include="EventArgs\StompFrameEventArgs.cs" />
     <Compile Include="EventArgs\StompMessageEventArgs.cs" />
-    <Compile Include="Frames\StompMessageFrame.cs" />
-    <Compile Include="Frames\StompNAckFrame.cs" />
-    <Compile Include="Frames\StompReceiptFrame.cs" />
-    <Compile Include="StompRingBuffer.cs" />
-    <Compile Include="Frames\StompSendFrame.cs" />
-    <Compile Include="Frames\StompStompFrame.cs" />
-    <Compile Include="StompStringReader.cs" />
-    <Compile Include="Frames\StompSubscribeFrame.cs" />
-    <Compile Include="Frames\StompUnsubscribeFrame.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Classes.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\STOMPShared\STOMPShared.csproj">
+      <Project>{c7a3584d-5c62-466c-9633-63e656ce96ae}</Project>
+      <Name>STOMPShared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

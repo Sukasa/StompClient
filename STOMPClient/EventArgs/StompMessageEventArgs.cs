@@ -1,5 +1,6 @@
-﻿
-namespace StompClient
+﻿using STOMP.Frames;
+
+namespace STOMP
 {
     /// <summary>
     ///     EventArgs class for Stomp message events

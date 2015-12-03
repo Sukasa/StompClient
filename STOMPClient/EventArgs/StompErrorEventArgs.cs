@@ -1,4 +1,6 @@
-﻿namespace StompClient
+﻿using STOMP.Frames;
+
+namespace STOMP
 {
     /// <summary>
     ///     EventArgs class for stomp server errors
@@ -15,7 +17,7 @@
         internal StompErrorEventArgs(StompErrorFrame Frame)
             : base(Frame)
         {
-            _ErrorMessage = Frame._errorMessage;
+            _ErrorMessage = Frame.ErrorMessage;
         }
     }
 }
