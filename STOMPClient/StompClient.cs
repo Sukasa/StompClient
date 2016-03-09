@@ -153,6 +153,20 @@ namespace STOMP
         }
 
         /// <summary>
+        ///     Creates a new Stomp client and connects to the destination server with default settings
+        /// </summary>
+        /// <param name="ServerAddress">
+        ///     The URI of the Stomp server to connect to 
+        /// </param>
+        /// <remarks>
+        ///     Constructs a Stomp client and opens a connection to the address supplied.  Will attempt to use protocol v1.2 initially, with the base protocol only.
+        /// </remarks>
+        public STOMPClient(string ServerAddress)
+        {
+            Connect(new Uri(ServerAddress));   
+        }
+
+        /// <summary>
         ///     Creates a new Stomp client
         /// </summary>
         /// <remarks>
