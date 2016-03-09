@@ -288,11 +288,49 @@ namespace STOMP
 
         }
 
+        /// <summary>
+        ///     Serializes and sends a default SEND frame to the server, with the supplied destination and message
+        /// </summary>
+        /// <param name="Destination">
+        ///     The destination to send the message to
+        /// </param>
+        /// <param name="Message">
+        ///     The textual message body
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if you attempt to send a message without specifying a destination
+        /// </exception>
+        public void SendMessage(string Destination, string Message)
         {
+            if (string.IsNullOrWhiteSpace(Destination))
+                throw new ArgumentException("Destination must not be null, empty, or whitespace.");
+
+            Message = Message ?? string.Empty;
+
+            SendFrame(new StompSendFrame(Destination, Message));
         }
 
+        /// <summary>
+        ///     Serializes and sends a default SEND frame to the server, with the supplied destination and message
+        /// </summary>
+        /// <param name="Destination">
+        ///     The destination to send the message to
+        /// </param>
+        /// <param name="Message">
+        ///     The binary message body
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if you attempt to send a message without specifying a destination
+        /// </exception>
+        public void SendMessage(string Destination, byte[] Message)
         {
+            if (string.IsNullOrWhiteSpace(Destination))
+                throw new ArgumentException("Destination must not be null, empty, or whitespace.");
 
+            Message = Message ?? new byte[] {};
+
+            SendFrame(new StompSendFrame(Destination, Message));
+        }
 
         /// <summary>
         ///     Subscribe to a feed, getting the Subscription Id assigned to that feed
