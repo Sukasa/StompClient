@@ -288,21 +288,11 @@ namespace STOMP
 
         }
 
-        // ---
-
-        [Obsolete("This is a debug function.  Don't use it.")]
-        public byte[] GetSerializedPacket(StompFrame Frame)
         {
-            return Frame.Serialize();
         }
 
-        [Obsolete("This is a debug function.  Don't use it.")]
-        public StompFrame GetBuiltFrame(byte[] Packet)
         {
-            return StompFrame.Build(Packet, _FrameTypeMapping);
-        }
 
-        // ---
 
         /// <summary>
         ///     Subscribe to a feed, getting the Subscription Id assigned to that feed
