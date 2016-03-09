@@ -206,6 +206,11 @@ namespace STOMP
         /// <param name="ServerAddress"></param>
         public void Connect(Uri ServerAddress)
         {
+
+            // Create the client if needed
+            if (_Client == null)
+                _Client = new TcpClient();
+
             // If we're already connected, close that connection and killit hard
             if (_Client.Connected)
             {
