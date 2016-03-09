@@ -219,7 +219,7 @@ namespace STOMP
             }
 
             // Now connect to the new stomp server
-            _Client.Connect(Dns.GetHostAddresses(ServerAddress.Host)[0], ServerAddress.Port);
+            _Client.Connect(Dns.GetHostAddresses(ServerAddress.Host)[0], ServerAddress.Port > 0 ? ServerAddress.Port : 8080);
 
             if (!_Client.Connected)
                 throw new InvalidOperationException("Failed to connect to server");
