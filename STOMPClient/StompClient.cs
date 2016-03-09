@@ -367,11 +367,11 @@ namespace STOMP
             // Now reply with either NAck or Ack depending on what was set on the EventArgs
             if (e.SendNAck)
             {
-                SendFrame(new StompNAckFrame(Frame.Ack));
+                SendFrame(new StompNAckFrame(Frame));
             }
             else
             {
-                SendFrame(new StompAckFrame(Frame.Ack));
+                SendFrame(new StompAckFrame(Frame));
             }
         }
 
